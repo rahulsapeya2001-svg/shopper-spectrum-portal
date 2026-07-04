@@ -127,7 +127,6 @@ class MockScaler:
 
 class MockKMeans:
     def predict(self, X):
-        # Deterministic cluster mapping based on input values if pickle is absent
         monetary = X[0][2]
         recency = X[0][0]
         if monetary > 5000: return 2
@@ -146,11 +145,14 @@ def load_assets():
             similarity_df = pickle.load(f)
         return kmeans, scaler, similarity_df
     except FileNotFoundError:
-        # Fallback objects if pkl files are too large for direct browser upload
         mock_items = ["REGENCY CAKESTAND 3 TIER", "WHITE HANGING HEART T-LIGHT HOLDER", 
                       "JUMBO BAG RED RETROSPOT", "PARTY BUNTING", "LUNCH BAG RED RETROSPOT", "ASSORTED COLOUR BIRD ORNAMENT"]
-        mock_similarity = pd.DataFrame(0.5, index=mock_items, columns=mock_items)
-        np.fill_diagonal(mock_similarity.values, 1.0)
+        
+        # Build completely mutable numpy background matrices to bypass cloud compilation blocks
+        matrix_data = np.zeros((len(mock_items), len(mock_items)))
+        np.fill_diagonal(matrix_data, 1.0)
+        
+        mock_similarity = pd.DataFrame(matrix_data, index=mock_items, columns=mock_items)
         return MockKMeans(), MockScaler(), mock_similarity
 
 kmeans, scaler, similarity_df = load_assets()
@@ -306,7 +308,6 @@ elif page == "🎁 Recommendation Engine":
         similar_scores = similarity_df[target_item].sort_values(ascending=False).head(6)
         recommended_items = [x for x in similar_scores.index.tolist() if x != target_item][:5]
         
-        # If dataset column features were too small fallback to display dynamic samples
         if not recommended_items:
             recommended_items = [x for x in similarity_df.index.tolist() if x != target_item][:5]
             
