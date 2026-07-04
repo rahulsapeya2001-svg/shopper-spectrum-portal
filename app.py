@@ -129,10 +129,12 @@ class MockKMeans:
     def predict(self, X):
         monetary = X[0][2]
         recency = X[0][0]
-        if monetary > 5000: return 2
-        if recency > 180: return 1
-        if monetary > 500: return 3
-        return 0
+        if monetary > 5000: res = 2
+        elif recency > 180: res = 1
+        elif monetary > 500: res = 3
+        else: res = 0
+        # FIX: Wrapped in a numpy array so that indexing with [0] works perfectly!
+        return np.array([res])
 
 @st.cache_resource
 def load_assets():
@@ -148,7 +150,6 @@ def load_assets():
         mock_items = ["REGENCY CAKESTAND 3 TIER", "WHITE HANGING HEART T-LIGHT HOLDER", 
                       "JUMBO BAG RED RETROSPOT", "PARTY BUNTING", "LUNCH BAG RED RETROSPOT", "ASSORTED COLOUR BIRD ORNAMENT"]
         
-        # Build completely mutable numpy background matrices to bypass cloud compilation blocks
         matrix_data = np.zeros((len(mock_items), len(mock_items)))
         np.fill_diagonal(matrix_data, 1.0)
         
